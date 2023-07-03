@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import draggable from 'vuedraggable';
+import { ref } from 'vue'
 
 const symbols = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'К']
 const figures = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -35,13 +35,87 @@ class Board {
     return newCells
   }
 
+  addShip(shipId: number, cellId: number) {
+    const ship = ships.ships.find((ship) => ship.id === shipId)
+    const cell = this.cells[cellId]
+    const cells: Cell[] = []
+
+    console.log(cell);
 
 
+    if (cell.ship) throw new Error("Ship alredy here");
+    if (!cell.isFree) throw new Error('You cant put the ship into this cell')
+
+    if (ship.getType !== 1) {
+      const indexes: number[] = []
+
+      for (let i = cell.getX; i < cell.getX + ship.getType; i++) {
+        indexes.push(i)
+      }
+
+      for (let i = 0; i < indexes.length; i++) {
+        const filteredCell = this.cells.find(function (item) {
+          if (item.getY !== cell.getY) return
+          return item.getX === indexes[i]
+        })
+
+        console.log(filteredCell);
+        
+        if (filteredCell.ship) throw new Error('ship already exits');
+        if (!filteredCell.isFree) throw new Error('this cell is not free');
+        cells.push(filteredCell)
+      }
+      
+      
+      cells.forEach(element => {
+        element.ship = ship
+      });
+
+    }
+
+
+    ship.setX = cell.getX
+    ship.setY = cell.getY
+
+    cell.ship = ship
+    this.lockCells([cell, ...cells])
+  }
+
+  lockCells(lockCells: Cell[]) {
+    const mustLock: Cell[] = []
+    for (const cell of lockCells) {
+      const coordinates = [
+        //top  
+        { x: cell.getX - 1, y: cell.getY - 1, },
+        { x: cell.getX, y: cell.getY - 1, },
+        { x: cell.getX + 1, y: cell.getY - 1, },
+        // left-right
+        { x: cell.getX - 1, y: cell.getY, },
+        { x: cell.getX + 1, y: cell.getY, },
+        //bottom
+        { x: cell.getX - 1, y: cell.getY + 1, },
+        { x: cell.getX, y: cell.getY + 1, },
+        { x: cell.getX + 1, y: cell.getY + 1, },
+      ]
+
+      for (let i = 0; i < coordinates.length; i++) {
+        const filteredCell = this.cells.find(function (item) {
+          return item.getX === coordinates[i].x && item.getY === coordinates[i].y
+        })
+
+        mustLock.push(filteredCell)
+      }
+    }
+
+    mustLock.forEach((cell) => cell !== undefined ? cell.isFree = false : null)
+  }
 }
 
 class Cell {
-  private x
-  private y
+  private x: number
+  private y: number
+  isFree = true
+  ship: BattleShip | null = null
 
   constructor(x: number, y: number) {
     this.x = x
@@ -58,45 +132,76 @@ class Cell {
 }
 
 class BattleShips {
-  battleShips: BattleShip[] = []
+  ships: BattleShip[] = []
 
   constructor() {
-
-    this.battleShips = this.crateBattleShips()
+    this.ships = this.crateBattleShips()
   }
 
   private crateBattleShips() {
     const ships: BattleShip[] = []
     const shipsTypes = [1, 1, 1, 2, 2, 2, 3, 3, 4, 5]
 
-    shipsTypes.forEach(element => {
-      ships.push(new BattleShip(element))
+
+    shipsTypes.forEach(function (element, idx) {
+      ships.push(new BattleShip(element, idx))
     });
 
     return ships
   }
 
-
+  public removeShip(id: number) {
+    const idx = this.ships.findIndex((ship) => ship.id === id)
+    this.ships.splice(idx, 1)
+  }
 }
 
 class BattleShip {
-  private type
+  private type: number
+  id: number
+  x: number | null = null
+  y: number | null = null
 
-  constructor(type: number) {
+  constructor(type: number, id: number) {
     this.type = type
+    this.id = id
   }
 
   get getType() {
     return this.type
   }
+
+  public set setX(value: number) {
+    this.x = value;
+  }
+
+  public set setY(value: number) {
+    this.y = value;
+  }
 }
 
 const board = new Board
 const ships = new BattleShips
+
 console.log(board.getCells);
-console.log(ships.battleShips);
 
 
+const selectedShip = ref<number | null>(null)
+
+const selectShip = (id: number) => selectedShip.value = selectedShip.value === id ? null : id
+
+function addShip(cellId: number) {
+  if (selectedShip.value === null) return
+
+  try {
+    board.addShip(selectedShip.value, cellId)
+  } catch (error) {
+    throw new Error(error);
+  }
+
+  ships.removeShip(selectedShip.value)
+  selectedShip.value = null
+}
 </script>
 
 <template>
@@ -117,17 +222,20 @@ console.log(ships.battleShips);
           </li>
         </ul>
         <div class="board">
-          <div class="cell" v-for="i in board.size" :key="i">
+          <div @click="addShip(idx)" class="cell" :class="{
+            'has-ship': id.ship,
+            'isnt-free': !id.isFree && !id.ship,
+            active: selectedShip !== null,
+          }" v-for="(id, idx) in board.getCells" :key="idx">
           </div>
         </div>
       </div>
     </div>
-    <UseDropZone />
     <div class="battle-ships">
-      <draggable>
-        <div class="ship" :class="'ship-' + ship.getType.toString()" v-for="(ship, idx) in ships.battleShips" :key="idx"
-          :style="{ width: 50 * ship.getType + 'px' }"></div>
-      </draggable>
+      {{ selectedShip }}
+      <div @click="selectShip(ship.id)" class="ship"
+        :class="'ship-' + ship.getType.toString(), selectedShip === ship.id ? 'selected' : ''" :id="ship.id.toString()"
+        v-for="(ship, idx) in ships.ships" :key="idx" :style="{ width: 50 * ship.getType + 'px' }"></div>
     </div>
   </div>
 </template>
@@ -159,6 +267,20 @@ console.log(ships.battleShips);
   background-color: #ebebeb;
   border-right: 2px dashed #C6C6CC;
   border-bottom: 2px dashed #C6C6CC;
+}
+
+.cell.has-ship {
+  background-color: #BABDC2;
+  border: 2px solid #838383;
+}
+
+.cell.isnt-free {
+  background-color: #c05c5c6e;
+}
+
+.cell.active:hover {
+  background-color: #d1cccc;
+  cursor: pointer;
 }
 
 .symbols {
@@ -201,5 +323,9 @@ console.log(ships.battleShips);
   height: 50px;
   background-color: #BABDC2;
   border-radius: 10px;
+}
+
+.ship.selected {
+  border: 4px dashed #828283;
 }
 </style>
