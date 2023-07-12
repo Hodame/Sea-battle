@@ -16,7 +16,9 @@ export default class Board {
     })
   }
 
-  public attackShip(cell: Cell) {
+  public attackShip(cellRef: Cell) {
+    const cell = this.cells.find(cell => cell.x == cellRef.x && cell.y == cellRef.y)
+    if(!cell) return
     if (cell.ship && !cell.isMissed) {
       cell.isHitted = true
     } else {
@@ -24,9 +26,9 @@ export default class Board {
     }
 
     if (cell.ship) {
-      const shipCells = this.cells.filter((cellRef) => cellRef.ship === cell.ship)
+      const shipCells = this.cells.filter((cellRef) => cellRef.ship?.id === cell.ship?.id)
+      console.log(shipCells)
       if (!shipCells.some((cell) => !cell.isHitted)) {
-        console.log(shipCells)
         const missedCells = this.getLockedCells(shipCells)
 
         missedCells.forEach(function (cell) {

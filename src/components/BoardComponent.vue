@@ -8,7 +8,7 @@ withDefaults(
   defineProps<{
     board: Board
     enemy?: boolean
-    turn: "player" | "enemy"
+    turn: boolean
     waiting?: boolean
   }>(),
   {
@@ -24,12 +24,11 @@ defineEmits<{
 <template>
   <div class="body">
     <div>
-      <p class="turn" v-if="turn === 'player'">Ваш ход</p>
-      <p class="turn" v-if="turn === 'enemy'">Ход противника</p>
-    </div>
+      <p class="turn" >{{ turn ? 'Создатель лобби' : 'Приглашённый' }}</p>
+    </div> 
     <div class="table">
       <div>
-        <ul class="symbols">
+        <ul v-if="!enemy" class="symbols">
           <div style="width: 50px; height: 50px"></div>
           <li v-for="(symbol, idx) in symbols" :key="idx">
             {{ symbol }}
@@ -65,6 +64,12 @@ defineEmits<{
           </div>
         </div>
       </div>
+      <ul v-if="enemy" class="symbols">
+        <div style="width: 50px; height: 50px"></div>
+        <li v-for="(symbol, idx) in symbols" :key="idx">
+          {{ symbol }}
+        </li>
+      </ul>
     </div>
   </div>
 </template>
