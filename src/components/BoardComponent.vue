@@ -24,8 +24,8 @@ defineEmits<{
 <template>
   <div class="body">
     <div>
-      <p class="turn" >{{ turn ? 'Создатель лобби' : 'Приглашённый' }}</p>
-    </div> 
+      <p class="turn">{{ turn ? "Создатель лобби" : "Приглашённый" }}</p>
+    </div>
     <div class="table">
       <div>
         <ul v-if="!enemy" class="symbols">
