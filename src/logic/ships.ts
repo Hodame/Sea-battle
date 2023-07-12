@@ -7,12 +7,11 @@ export default class BattleShips {
 
   private crateBattleShips() {
     const ships: BattleShip[] = []
-    const shipsTypes = [1, 1, 1, 2, 2, 2, 3, 3, 4, 5]
-
+    const shipsTypes = [1, 1, 1, 1, 2, 2, 2, 3, 3, 4]
 
     shipsTypes.forEach(function (element, idx) {
       ships.push(new BattleShip(element, idx))
-    });
+    })
 
     return ships
   }
@@ -42,10 +41,10 @@ export class BattleShip {
   }
 
   public set setX(value: number) {
-    this.x = value;
+    this.x = value
   }
 
   public set setY(value: number) {
-    this.y = value;
+    this.y = value
   }
 }
