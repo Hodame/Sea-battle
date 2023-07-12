@@ -6,9 +6,9 @@ const figures = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 withDefaults(
   defineProps<{
-    board: Board
+    board: any // must be board but it display ts error
     enemy?: boolean
-    turn: boolean
+    turn?: boolean
     waiting?: boolean
   }>(),
   {

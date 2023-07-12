@@ -98,8 +98,8 @@ onDeactivated(() => useBoard.set([]))
   <div class="wrapper">
     <BackButton />
     <div class="boarders">
-      <BoardComponent :turn="turn" :board="player" />
-      <BoardComponent @click="attack" :turn="turn" enemy :board="enemy" />
+      <BoardComponent :board="player" />
+      <BoardComponent @click="attack" enemy :board="enemy" />
     </div>
   </div>
 </template>
